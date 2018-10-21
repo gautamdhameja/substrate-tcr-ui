@@ -1,25 +1,29 @@
 import React, { Component } from 'react';
-import logo from './logo.svg';
+import Listings from './Listings'
 import './App.css';
 
 class App extends Component {
+  constructor(props) {
+    super(props);
+    this.state = {
+      listings: [
+        {
+          name: "Listing1", 
+          hash: "", 
+          deposit: 200, 
+          isWhitelisted: false, 
+          owner: ""
+        }
+      ]
+    };
+  }
   render() {
     return (
       <div className="App">
-        <header className="App-header">
-          <img src={logo} className="App-logo" alt="logo" />
-          <p>
-            Edit <code>src/App.js</code> and save to reload.
-          </p>
-          <a
-            className="App-link"
-            href="https://reactjs.org"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Learn React
-          </a>
-        </header>
+        <h2>Simple Token Curated Registry</h2>
+        <div>
+          <Listings list={this.state.listings} />
+        </div>
       </div>
     );
   }
