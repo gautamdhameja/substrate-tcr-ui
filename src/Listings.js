@@ -1,23 +1,18 @@
 import React from 'react'
-import { Button, Icon, Item, Label } from 'semantic-ui-react'
+import { Item, Label } from 'semantic-ui-react'
 
-const ListingItem = ({ name, hash, deposit, isWhitelisted, owner }) => (
-    <Item>
-        <Item.Image>
-            <Icon name="database" size="huge"/>
-        </Item.Image>
-
+const ListingItem = ({ name, hash, challenge, isWhitelisted, owner }) => {
+    return (<Item>
         <Item.Content>
-            <Item.Header>{name}</Item.Header>
+            <Item.Header>Name: <b>{name}</b></Item.Header>
             <Item.Meta>
-                <Label>{hash}</Label>
-                <Label>{deposit}</Label>
-                <Label>{owner}</Label>
+                <Label>Hex: <b>{hash.toString()}</b></Label>
+                <Label>ChallengeID: <b>{challenge}</b></Label>
+                <Label>Owner: <b>{owner}</b></Label>
             </Item.Meta>
-            <Item.Description content={isWhitelisted}></Item.Description>
         </Item.Content>
-    </Item>
-)
+    </Item>)
+}
 
 const Listings = ({list}) => (
     <Item.Group divided>
