@@ -21,6 +21,7 @@ class App extends Component {
     return (
       <div className="App">
         <h2>Simple Token Curated Registry</h2>
+        <h3>Top Listings</h3>
         <div>
           <Listings list={this.state.listings} />
         </div>
