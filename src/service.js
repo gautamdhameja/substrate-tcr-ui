@@ -5,6 +5,11 @@ import tcrArtifact from './contracts/Tcr.json'
 
 const web3 = new Web3(new Web3.providers.HttpProvider(process.env.REACT_APP_ETH_URL));
 
+export async function getTcrDetails(tcrAddress) {
+    const contract = new web3.eth.Contract(tcrArtifact.abi, tcrAddress);
+    return await contract.methods.getDetails().call();
+}
+
 export async function getAllListings(tcrAddress) {
     const contract = new web3.eth.Contract(tcrArtifact.abi, tcrAddress);
     const result = await contract.methods.getAllListings().call();

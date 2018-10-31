@@ -8,11 +8,31 @@ class App extends Component {
   constructor(props) {
     super(props);
     this.state = {
+      tcrDetails: {
+        name: "",
+        tokenAddress: "",
+        minDeposit: "", 
+        applyStageLen: "", 
+        commitStageLen: ""
+      },
       listingName: null,
       listings: []
     };
     this.applyListing = this.applyListing.bind(this);
     this.handleSubmit = this.handleSubmit.bind(this);
+  }
+
+  async componentDidMount() {
+    const details = await service.getTcrDetails(process.env.REACT_APP_TCR_ADDR);
+    this.setState({
+      tcrDetails: {
+        name: details[0],
+        tokenAddress: details[1],
+        minDeposit: details[2], 
+        applyStageLen: details[3], 
+        commitStageLen: details[4]
+      }
+    });
   }
 
   handleValueChange(event) {
@@ -42,8 +62,14 @@ class App extends Component {
           <p className="h2">Simple Token Curated Registry</p>
           <br />
           <div className="alert alert-primary text-left">
-            <br />
-            <p className="h4">TCR Details</p>
+            <p><b>TCR Details</b></p>
+            <div>
+              <p>Registry Name: <b>{this.state.tcrDetails.name}</b></p>
+              <p>Token Address: <b>{this.state.tcrDetails.tokenAddress}</b></p>
+              <p>Minimum Deposit (tokens): <b>{this.state.tcrDetails.minDeposit}</b></p>
+              <p>Apply Stage Period (seconds): <b>{this.state.tcrDetails.applyStageLen}</b></p>
+              <p>Commit Stage Period (seconds): <b>{this.state.tcrDetails.commitStageLen}</b></p>
+            </div>
           </div>
           <div className="container-fluid text-left">
             <form className="inputForm" onSubmit={this.handleSubmit}>
