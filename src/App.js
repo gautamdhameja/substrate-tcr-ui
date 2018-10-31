@@ -8,9 +8,20 @@ class App extends Component {
   constructor(props) {
     super(props);
     this.state = {
+      listingName: null,
       listings: []
     };
+    this.applyListing = this.applyListing.bind(this);
     this.handleSubmit = this.handleSubmit.bind(this);
+  }
+
+  handleValueChange(event) {
+    this.setState({listingName: event.target.value})
+  }
+
+  async applyListing(event) {
+    event.preventDefault();
+    const applyListing = await service.applyListing(this.state.listingName, process.env.REACT_APP_TCR_ADDR);
   }
 
   async handleSubmit(event) {
@@ -27,21 +38,37 @@ class App extends Component {
 
   render() {
     return (
-      <div className="App">
+      <section className="jumbotron text-center">
+      <div className="container">
         <h2>Simple Token Curated Registry</h2>
-        <br/>
-            <div className="lead-body">
-              <form className="inputForm" onSubmit={this.handleSubmit}>
+        <br/><br/>
+            <div className="alert alert-warning">
+              <form className="inputForm" onSubmit={this.applyListing}>
                 <div>
-                  <button className="btn btn-lg btn-primary btn-block" type="submit">Get All</button>
+                  <label htmlFor="inputValue" className="sr-only">Listing Name:</label>
+                  <input type="text" name="inputValue" id="inputValue" className="form-control" value={this.state.listingName} onChange={this.handleValueChange.bind(this)}/>
+                  <button className="btn btn-lg btn-primary btn-block" type="submit">Apply</button>
                 </div>
               </form>
             </div>
-        <h3>Top Listings</h3>
-        <div>
-          <Listings list={this.state.listings} />
-        </div>
+            <br/>
+            <div className="row">
+              <div className="col-6">
+                <div className="lead-body">
+                <form className="inputForm" onSubmit={this.handleSubmit}>
+                  <div>
+                    <button className="btn btn-lg btn-primary btn-block" type="submit">Get All</button>
+                  </div>
+                </form>
+                <h3>All Listings</h3>
+                  <div>
+                    <Listings list={this.state.listings} />
+                  </div>
+                </div>
+              </div>
+            </div>
       </div>
+    </section>
     );
   }
 }
