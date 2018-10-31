@@ -16,7 +16,7 @@ class App extends Component {
   }
 
   handleValueChange(event) {
-    this.setState({listingName: event.target.value})
+    this.setState({ listingName: event.target.value })
   }
 
   async applyListing(event) {
@@ -25,52 +25,51 @@ class App extends Component {
   }
 
   async handleSubmit(event) {
-      event.preventDefault();
-      const result = await service.getAllListings(process.env.REACT_APP_TCR_ADDR);
-      setTimeout(() => {
-        console.log(Object.keys(result), result);
-        for (const item of result) {
-          this.setState({ listings: [...this.state.listings, item]});
-          console.log(this.state.listings);
-        }
-      }, 1000);
+    event.preventDefault();
+    this.setState({ listings: [] });
+    const result = await service.getAllListings(process.env.REACT_APP_TCR_ADDR);
+    setTimeout(() => {
+      for (const item of result) {
+        this.setState({ listings: [...this.state.listings, item] });
+      }
+    }, 1000);
   }
 
   render() {
     return (
-      <section className="jumbotron text-center">
-      <div className="container">
-        <h2>Simple Token Curated Registry</h2>
-        <br/><br/>
-            <div className="alert alert-warning">
-              <form className="inputForm" onSubmit={this.applyListing}>
-                <div>
-                  <label htmlFor="inputValue" className="sr-only">Listing Name:</label>
-                  <input type="text" name="inputValue" id="inputValue" className="form-control" value={this.state.listingName} onChange={this.handleValueChange.bind(this)}/>
-                  <button className="btn btn-lg btn-primary btn-block" type="submit">Apply</button>
-                </div>
-              </form>
+        <div className="container text-center">
+        <br/>
+          <p className="h2">Simple Token Curated Registry</p>
+          <br />
+          <div className="alert alert-primary text-left">
+            <br />
+            <p className="h4">TCR Details</p>
+          </div>
+          <div className="container-fluid text-left">
+            <form className="inputForm" onSubmit={this.handleSubmit}>
+              <span className="h3">All Listings</span>
+              <button className="btn btn-secondary float-right" type="submit">Get All Listings</button>
+            </form>
+            <br />
+            <div className="text-left">
+              <Listings list={this.state.listings} />
             </div>
-            <br/>
-            <div className="row">
-              <div className="col-6">
-                <div className="lead-body">
-                <form className="inputForm" onSubmit={this.handleSubmit}>
-                  <div>
-                    <button className="btn btn-lg btn-primary btn-block" type="submit">Get All</button>
-                  </div>
-                </form>
-                <h3>All Listings</h3>
-                  <div>
-                    <Listings list={this.state.listings} />
-                  </div>
-                </div>
-              </div>
-            </div>
-      </div>
-    </section>
+          </div>
+        </div>
     );
   }
 }
+
+{/* <form className="inputForm" onSubmit={this.applyListing}>
+<div>
+  <label htmlFor="listingName">Listing Name:</label>
+  <input type="text" name="listingName" id="listingName" className="form-control" value={this.state.listingName} onChange={this.handleValueChange.bind(this)} />
+  <br />
+  <label htmlFor="listingDeposit">Deposit:</label>
+  <input type="text" name="listingDeposit" id="listingDeposit" className="form-control" value={this.state.listingDeposit} onChange={this.handleValueChange.bind(this)} />
+  <br />
+  <button className="btn btn-primary" type="submit">Apply</button>
+</div>
+</form> */}
 
 export default App;
