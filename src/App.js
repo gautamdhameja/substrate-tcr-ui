@@ -11,26 +11,32 @@ class App extends Component {
       tcrDetails: {
         name: "",
         tokenAddress: "",
-        minDeposit: "", 
-        applyStageLen: "", 
+        minDeposit: "",
+        applyStageLen: "",
         commitStageLen: ""
       },
       listingName: null,
-      listings: []
+      listings: [],
     };
     this.applyListing = this.applyListing.bind(this);
     this.handleSubmit = this.handleSubmit.bind(this);
   }
 
-  async componentDidMount() {
-    const details = await service.getTcrDetails(process.env.REACT_APP_TCR_ADDR);
-    this.setState({
-      tcrDetails: {
-        name: details[0],
-        tokenAddress: details[1],
-        minDeposit: details[2], 
-        applyStageLen: details[3], 
-        commitStageLen: details[4]
+  componentDidMount() {
+    service.getTcrDetails(process.env.REACT_APP_TCR_ADDR).then((details) => {
+      this.setState({
+        tcrDetails: {
+          name: details[0],
+          tokenAddress: details[1],
+          minDeposit: details[2],
+          applyStageLen: details[3],
+          commitStageLen: details[4]
+        }
+      });
+    });
+    service.getAllListings(process.env.REACT_APP_TCR_ADDR).then((result) => {
+      for (const item of result) {
+        this.setState({ listings: [...this.state.listings, item] });
       }
     });
   }
@@ -58,8 +64,8 @@ class App extends Component {
   render() {
     return (
         <div className="container text-center">
-        <br/>
-          <p className="h2">Simple Token Curated Registry</p>
+          <br />
+          <p className="h2">*Simple* Token Curated Registry</p>
           <br />
           <div className="alert alert-primary text-left">
             <p><b>TCR Details</b></p>
@@ -73,7 +79,7 @@ class App extends Component {
           </div>
           <div className="container-fluid text-left">
             <form className="inputForm" onSubmit={this.handleSubmit}>
-              <span className="h3">All Listings</span>
+              <span className="h3">Listings</span>
               <button className="btn btn-secondary float-right" type="submit">Get All Listings</button>
             </form>
             <br />
