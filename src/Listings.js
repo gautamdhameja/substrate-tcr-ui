@@ -4,7 +4,7 @@ import { Item, Label } from 'semantic-ui-react'
 const ListingItem = ({ name, hash, challenge, isWhitelisted, owner }) => {
     return (<Item>
         <Item.Content>
-            <Item.Header>Name: <b>{name}</b></Item.Header>
+            <Item.Header><b>{name}</b></Item.Header>
             <Item.Meta>
                 <Label>Hex: <b>{hash.toString()}</b></Label>
                 <Label>ChallengeID: <b>{challenge}</b></Label>

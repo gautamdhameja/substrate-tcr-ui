@@ -30,15 +30,16 @@ export async function getAllListings(tcrAddress) {
     return listings;
 }
 
-export async function applyListing(name, tcrAddress) {
+export async function applyListing(name, deposit, tcrAddress) {
     const contract = new web3.eth.Contract(tcrArtifact.abi, tcrAddress);
     const tokenAddr = await contract.methods.token().call();
     const token = new web3.eth.Contract(tokenArtifact.abi, tokenAddr);
     token.options.from = process.env.REACT_APP_ACC1;
     contract.options.from = process.env.REACT_APP_ACC1;
     contract.options.gas = 3000000;
+    const dep = parseInt(deposit.toString());
 
-    await token.methods.approve(tcrAddress, 100).send();
-    const applyListing = await contract.methods.apply(web3.utils.asciiToHex(name), 100, name).send();
+    await token.methods.approve(tcrAddress, dep).send();
+    const applyListing = await contract.methods.apply(web3.utils.asciiToHex(name), dep, name).send();
     console.log(applyListing);
 }
