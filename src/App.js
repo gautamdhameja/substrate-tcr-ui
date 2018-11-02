@@ -33,7 +33,7 @@ class App extends Component {
   }
 
   componentDidMount() {
-    service.getTcrDetails(process.env.REACT_APP_TCR_ADDR).then((details) => {
+    service.getTcrDetails().then((details) => {
       this.setState({
         tcrDetails: {
           name: details[0],
@@ -57,7 +57,7 @@ class App extends Component {
 
   async applyListing(event) {
     event.preventDefault();
-    service.applyListing(this.state.listingName, this.state.listingDeposit, process.env.REACT_APP_TCR_ADDR).then(() => {
+    service.applyListing(this.state.listingName, this.state.listingDeposit).then(() => {
       this.getAllListings();
     });
   }
@@ -69,7 +69,7 @@ class App extends Component {
 
   getAllListings() {
     this.setState({ listings: [] });
-    service.getAllListings(process.env.REACT_APP_TCR_ADDR).then((result) => {
+    service.getAllListings().then((result) => {
       setTimeout(() => {
         for (const item of result) {
           this.setState({ listings: [...this.state.listings, item] });
