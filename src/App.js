@@ -1,6 +1,6 @@
 import React, { Component } from 'react';
-import { Button, Modal, ModalHeader, ModalBody, ModalFooter } from 'reactstrap';
 import Listings from './Listings'
+import Popup from './Popup';
 import './App.css';
 
 import * as service from './service';
@@ -16,20 +16,12 @@ class App extends Component {
         applyStageLen: "",
         commitStageLen: ""
       },
-      listingName: "",
-      listingDeposit: "",
       listings: [],
       modal: false
     };
     this.applyListing = this.applyListing.bind(this);
     this.handleSubmit = this.handleSubmit.bind(this);
     this.toggle = this.toggle.bind(this);
-  }
-
-  toggle() {
-    this.setState({
-      modal: !this.state.modal
-    });
   }
 
   componentDidMount() {
@@ -47,17 +39,14 @@ class App extends Component {
     this.getAllListings();
   }
 
-  handleNameChange(event) {
-    this.setState({ listingName: event.target.value })
+  toggle() {
+    this.setState({
+      modal: !this.state.modal
+    });
   }
 
-  handleDepositChange(event) {
-    this.setState({ listingDeposit: event.target.value })
-  }
-
-  async applyListing(event) {
-    event.preventDefault();
-    service.applyListing(this.state.listingName, this.state.listingDeposit).then(() => {
+  async applyListing(name, deposit) {
+    service.applyListing(name, deposit).then(() => {
       this.getAllListings();
     });
   }
@@ -84,24 +73,7 @@ class App extends Component {
   render() {
     return (
       <div>
-        <div>
-          <Modal isOpen={this.state.modal} toggle={this.toggle} className={this.props.className}>
-            <ModalHeader toggle={this.toggle}>Modal title</ModalHeader>
-            <ModalBody>
-              <div>
-                <label htmlFor="listingName">Listing Name:</label>
-                <input type="text" name="listingName" id="listingName" className="form-control" value={this.state.listingName} onChange={this.handleNameChange.bind(this)} />
-                <br />
-                <label htmlFor="listingDeposit">Deposit:</label>
-                <input type="text" name="listingDeposit" id="listingDeposit" className="form-control" value={this.state.listingDeposit} onChange={this.handleDepositChange.bind(this)} />
-              </div>
-            </ModalBody>
-            <ModalFooter>
-              <Button color="primary" onClick={this.applyListing}>Submit</Button>{' '}
-              <Button color="secondary" onClick={this.toggle}>Cancel</Button>
-            </ModalFooter>
-          </Modal>
-        </div>
+        <Popup modal={this.state.modal} submit={this.applyListing} toggle={this.toggle} />
         <div className="container text-center">
           <br />
           <p className="h2">*Simple* Token Curated Registry</p>

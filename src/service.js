@@ -47,6 +47,14 @@ export async function challengeListing(name, deposit) {
     console.log(challengeListing);
 }
 
+export async function voteListing(name, deposit, choice) {
+    const contracts = await setupContracts(tcrAddress);
+    const dep = parseInt(deposit.toString());
+    await contracts.token.methods.approve(tcrAddress, dep).send();
+    const voteListing = await contracts.tcr.methods.vote(web3.utils.asciiToHex(name), dep, choice).send();
+    console.log(voteListing);
+}
+
 export async function resolveListing(name) {
     const contracts = await setupContracts(tcrAddress);
     const resolveListing = await contracts.tcr.methods.updateStatus(web3.utils.asciiToHex(name)).send();
