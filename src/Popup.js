@@ -8,7 +8,7 @@ class Popup extends Component {
             listingName: "",
             listingDeposit: ""
         }
-        
+
         this.handleSubmit = this.handleSubmit.bind(this);
     }
 
@@ -27,7 +27,7 @@ class Popup extends Component {
     render() {
         return (<div>
             <Modal isOpen={this.props.modal} toggle={this.props.toggle}>
-                <ModalHeader toggle={this.props.toggle}>Modal title</ModalHeader>
+                <ModalHeader toggle={this.props.toggle}>{this.props.header}</ModalHeader>
                 <ModalBody>
                     <div>
                         <label htmlFor="listingName">Listing Name:</label>

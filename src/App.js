@@ -73,10 +73,10 @@ class App extends Component {
   render() {
     return (
       <div>
-        <Popup modal={this.state.modal} submit={this.applyListing} toggle={this.toggle} />
+        <Popup modal={this.state.modal} submit={this.applyListing} toggle={this.toggle} header={"Apply Listing"} />
         <div className="container text-center">
           <br />
-          <p className="h2">*Simple* Token Curated Registry</p>
+          <p className="h2">*simple* Token Curated Registry</p>
           <br />
           <div className="alert alert-primary text-left">
             <p><b>TCR Details</b></p>
