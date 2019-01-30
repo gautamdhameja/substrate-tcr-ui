@@ -5,12 +5,8 @@ import '../node_modules/bootstrap/dist/css/bootstrap.min.css';
 import './index.css';
 import App from './App';
 import * as serviceWorker from './serviceWorker';
-import { getAllListings } from './service';
 
 require('dotenv').config()
-
-// set the web3 provider from metamask
-getAllListings(process.env.REACT_APP_TCR_ADDR);
 
 ReactDOM.render(<App />, document.getElementById('root'));
 

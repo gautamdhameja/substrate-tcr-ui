@@ -9,11 +9,11 @@ class ListingItem extends Component {
     }
 
     async challenge(name, deposit) {
-        await service.challengeListing(name, deposit);
+        // await service.challengeListing(name, deposit);
     }
 
     async resolve(name) {
-        await service.resolveListing(name);
+        // await service.resolveListing(name);
     }
 
     render() {

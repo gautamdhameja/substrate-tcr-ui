@@ -9,9 +9,8 @@ class App extends Component {
   constructor(props) {
     super(props);
     this.state = {
+      connection: {},
       tcrDetails: {
-        name: "",
-        tokenAddress: "",
         minDeposit: "",
         applyStageLen: "",
         commitStageLen: ""
@@ -25,14 +24,17 @@ class App extends Component {
   }
 
   componentDidMount() {
+    service.main().then((connect) => {
+      this.setState({
+        connection: connect
+      });
+    });
     service.getTcrDetails().then((details) => {
       this.setState({
         tcrDetails: {
-          name: details[0],
-          tokenAddress: details[1],
-          minDeposit: details[2],
-          applyStageLen: details[3],
-          commitStageLen: details[4]
+          minDeposit: details.mdTokens,
+          applyStageLen: details.aslSeconds,
+          commitStageLen: details.cslSeconds
         }
       });
     });
@@ -46,9 +48,9 @@ class App extends Component {
   }
 
   async applyListing(name, deposit) {
-    service.applyListing(name, deposit).then(() => {
-      this.getAllListings();
-    });
+    // service.applyListing(name, deposit).then(() => {
+    //   this.getAllListings();
+    // });
   }
 
   async handleSubmit(event) {
@@ -76,13 +78,14 @@ class App extends Component {
         <Popup modal={this.state.modal} submit={this.applyListing} toggle={this.toggle} header={"Apply Listing"} />
         <div className="container text-center">
           <br />
-          <p className="h2">*simple* Token Curated Registry</p>
+          <p className="h2">Substrate TCR</p>
           <br />
           <div className="alert alert-primary text-left">
-            <p><b>TCR Details</b></p>
             <div>
-              <p>Registry Name: <b>{this.state.tcrDetails.name}</b></p>
-              <p>Token Address: <b>{this.state.tcrDetails.tokenAddress}</b></p>
+              <div class="alert alert-success" role="alert">
+                Connected to - chain: <b>{this.state.connection.chain}</b>, node-name: <b>{this.state.connection.name}</b>, version: <b>{this.state.connection.version}</b>
+              </div>
+              <p><b>TCR Parameters</b></p>
               <p>Minimum Deposit (tokens): <b>{this.state.tcrDetails.minDeposit}</b></p>
               <p>Apply Stage Period (seconds): <b>{this.state.tcrDetails.applyStageLen}</b></p>
               <p>Commit Stage Period (seconds): <b>{this.state.tcrDetails.commitStageLen}</b></p>
