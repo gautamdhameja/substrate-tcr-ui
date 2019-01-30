@@ -47,10 +47,11 @@ class App extends Component {
     });
   }
 
-  async applyListing(name, deposit) {
-    // service.applyListing(name, deposit).then(() => {
-    //   this.getAllListings();
-    // });
+  async applyListing(seed, name, deposit) {
+    service.applyListing(seed, name, deposit).then((result) => {
+      console.log(result);
+      this.toggle();
+    });
   }
 
   async handleSubmit(event) {
@@ -82,7 +83,7 @@ class App extends Component {
           <br />
           <div className="alert alert-primary text-left">
             <div>
-              <div class="alert alert-success" role="alert">
+              <div className="alert alert-success" role="alert">
                 Connected to - chain: <b>{this.state.connection.chain}</b>, node-name: <b>{this.state.connection.name}</b>, version: <b>{this.state.connection.version}</b>
               </div>
               <p><b>TCR Parameters</b></p>

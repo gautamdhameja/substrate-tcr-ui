@@ -4,7 +4,9 @@
   "private": false,
   "dependencies": {
     "@polkadot/api": "^0.41.10",
+    "@polkadot/keyring": "^0.33.36",
     "@polkadot/rpc-provider": "^0.41.10",
+    "@polkadot/util": "^0.33.36",
     "bootstrap": "^4.1.3",
     "dotenv": "^6.1.0",
     "react": "^16.6.0",
