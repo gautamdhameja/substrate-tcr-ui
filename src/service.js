@@ -1,6 +1,3 @@
-import { resolve, reject } from 'q';
-
-// Required imports
 const { ApiPromise } = require('@polkadot/api');
 const { WsProvider } = require('@polkadot/rpc-provider');
 const { Keyring } = require('@polkadot/keyring');
@@ -34,8 +31,12 @@ export async function getTcrDetails() {
         api.query.tcr.minDeposit()
     ]);
     
+    // the Moment type is returned as the full Date object
+    // converting it to seconds
     const aslSeconds = Math.floor(new Date(asl).getTime() / 1000);
     const cslSeconds = Math.floor(new Date(csl).getTime() / 1000);
+
+    // converting the Balance type to value string
     const mdTokens = JSON.stringify(md);
     
     return { aslSeconds, cslSeconds, mdTokens };
@@ -61,11 +62,16 @@ export async function applyListing(seed, name, deposit) {
         // create transaction
         .propose(name, deposit)
         // Sign and send the transcation
-        .signAndSend(keys, (response) => {
-            console.log(JSON.stringify(response));
-            if(response.type === "Finalised") {
-                // return the transaction hash
-                resolve(JSON.stringify(response.status));
+        .signAndSend(keys, ({ events = [], status, type }) => {
+            console.log('Transaction status:', type);
+
+            if (type === 'Finalised') {
+                console.log('Completed at block hash', status.asFinalised.toHex());
+                console.log('Events:');
+
+                events.forEach(({ phase, event: { data, method, section } }) => {
+                    console.log('\t', phase.toString(), `: ${section}.${method}`, data.toString());
+                });
             }
         })
         .catch(err => reject(err));

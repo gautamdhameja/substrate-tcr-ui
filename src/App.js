@@ -84,7 +84,9 @@ class App extends Component {
           <div className="alert alert-primary text-left">
             <div>
               <div className="alert alert-success" role="alert">
-                Connected to - chain: <b>{this.state.connection.chain}</b>, node-name: <b>{this.state.connection.name}</b>, version: <b>{this.state.connection.version}</b>
+                <b>Connection Details</b>
+                <br/> <br/>
+                Chain: <b>{this.state.connection.chain}</b>; Node Name: <b>{this.state.connection.name}</b>; Version: <b>{this.state.connection.version}</b>
               </div>
               <p><b>TCR Parameters</b></p>
               <p>Minimum Deposit (tokens): <b>{this.state.tcrDetails.minDeposit}</b></p>
