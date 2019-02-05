@@ -1,5 +1,5 @@
 import React, { Component } from 'react';
-import { Button, Modal, ModalHeader, ModalBody, ModalFooter } from 'reactstrap';
+import { Button, Modal, ModalHeader, ModalBody, ModalFooter, Spinner } from 'reactstrap';
 
 class Popup extends Component {
     constructor(props) {
@@ -7,22 +7,22 @@ class Popup extends Component {
         this.state = {
             seed: "",
             listingName: "",
-            listingDeposit: ""
+            listingDeposit: "",
         }
 
         this.handleSubmit = this.handleSubmit.bind(this);
     }
 
     handleSeedChange(event) {
-        this.setState({ seed: event.target.value })
+        this.setState({ seed: event.target.value });
     }
 
     handleNameChange(event) {
-        this.setState({ listingName: event.target.value })
+        this.setState({ listingName: event.target.value });
     }
 
     handleDepositChange(event) {
-        this.setState({ listingDeposit: event.target.value })
+        this.setState({ listingDeposit: event.target.value });
     }
 
     handleSubmit() {
@@ -46,6 +46,12 @@ class Popup extends Component {
                     </div>
                 </ModalBody>
                 <ModalFooter>
+                    <div className="center">
+                        { 
+                            this.props.inProgress && 
+                            <Spinner color="primary" />
+                        }
+                    </div>
                     <Button color="primary" onClick={this.handleSubmit}>Submit</Button>{' '}
                     <Button color="secondary" onClick={this.props.toggle}>Cancel</Button>
                 </ModalFooter>

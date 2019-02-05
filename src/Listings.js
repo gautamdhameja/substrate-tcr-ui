@@ -8,8 +8,8 @@ class ListingItem extends Component {
         super(props);
     }
 
-    async challenge(name, deposit) {
-        // await service.challengeListing(name, deposit);
+    async challenge(hash, deposit) {
+        // await service.challengeListing(hash, deposit);
     }
 
     async resolve(name) {
@@ -30,8 +30,8 @@ class ListingItem extends Component {
                     <Label>Hash: <b>{hash}</b></Label>
                 </Item.Meta>
                 <Item.Extra>
-                    <Button basic color='green' size='mini' floated='right' onClick={async () => this.resolve(name)}>Resolve</Button>
-                    <Button basic color='blue' size='mini' floated='right' onClick={async () => this.challenge(name, deposit)}>Challenge</Button>
+                    <Button basic color='green' size='mini' floated='right' onClick={async () => this.resolve(hash)}>Resolve</Button>
+                    <Button basic color='blue' size='mini' floated='right' onClick={async () => this.challenge(hash, deposit)}>Challenge</Button>
                     <Button basic color='grey' size='mini' floated='right'>Vote</Button>
                 </Item.Extra>
             </Item.Content>

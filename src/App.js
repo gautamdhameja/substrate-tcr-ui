@@ -16,7 +16,8 @@ class App extends Component {
         commitStageLen: ""
       },
       listings: [],
-      modal: false
+      modal: false,
+      inProgress: false
     };
     this.applyListing = this.applyListing.bind(this);
     this.handleSubmit = this.handleSubmit.bind(this);
@@ -48,9 +49,12 @@ class App extends Component {
   }
 
   async applyListing(seed, name, deposit) {
+    this.setState({ inProgress: true });
     service.applyListing(seed, name, deposit).then((result) => {
       console.log(result);
+      this.setState({ inProgress: false });
       this.toggle();
+      this.getAllListings();
     });
   }
 
@@ -76,16 +80,16 @@ class App extends Component {
   render() {
     return (
       <div>
-        <Popup modal={this.state.modal} submit={this.applyListing} toggle={this.toggle} header={"Apply Listing"} />
+        <Popup modal={this.state.modal} submit={this.applyListing} toggle={this.toggle} header={"Apply Listing"} inProgress={this.state.inProgress} />
         <div className="container text-center">
           <br />
           <p className="h2">Substrate TCR</p>
           <br />
           <div className="alert alert-primary text-left">
             <div>
-              <div className="alert alert-success" role="alert">
+              <div className="alert alert-success">
                 <b>Connection Details</b>
-                <br/> <br/>
+                <br /> <br />
                 Chain: <b>{this.state.connection.chain}</b>; Node Name: <b>{this.state.connection.name}</b>; Version: <b>{this.state.connection.version}</b>
               </div>
               <p><b>TCR Parameters</b></p>
@@ -94,15 +98,16 @@ class App extends Component {
               <p>Commit Stage Period (seconds): <b>{this.state.tcrDetails.commitStageLen}</b></p>
             </div>
           </div>
-          <br/>
+          <br />
           <div className="container text-left">
             <span className="h3">Listings</span>
-            <button className="btn btn-secondary float-right" style={{marginLeft:10}} type="button" onClick={this.handleSubmit}>Get All Listings</button>
+            <button className="btn btn-secondary float-right" style={{ marginLeft: 10 }} type="button" onClick={this.handleSubmit}>Get All Listings</button>
             <button className="btn btn-primary float-right" onClick={this.toggle}>Apply Listing</button>
-            <br/><br/><br/>
+            <br /><br /><br />
             <div className="text-left">
               <Listings list={this.state.listings} />
             </div>
+            <br /><br />
           </div>
         </div>
       </div>
