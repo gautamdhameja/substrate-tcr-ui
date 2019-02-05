@@ -3,12 +3,12 @@ const { WsProvider } = require('@polkadot/rpc-provider');
 const { Keyring } = require('@polkadot/keyring');
 const { stringToU8a } = require('@polkadot/util');
 
-// Initialise the provider to connect to the local node
-const provider = new WsProvider('ws://127.0.0.1:9944');
+// Initialise the websocket provider to connect to the Substrate node
+const provider = new WsProvider(process.env.REACT_APP_SUBSTRATE_ADDR);
 
-export async function main () {
+export async function connect() {
     const api = await ApiPromise.create(provider);
-    
+
     // Retrieve the chain & node information information via rpc calls
     const [chain, name, version] = await Promise.all([
         api.rpc.system.chain(),
@@ -22,7 +22,7 @@ export async function main () {
 }
 
 export async function getTcrDetails() {
-    const api = await ApiPromise.create();
+    const api = await ApiPromise.create(provider);
 
     // Make our basic chain state/storage queries, all in one go
     const [asl, csl, md] = await Promise.all([
@@ -30,7 +30,7 @@ export async function getTcrDetails() {
         api.query.tcr.commitStageLen(),
         api.query.tcr.minDeposit()
     ]);
-    
+
     // the Moment type is returned as the full Date object
     // converting it to seconds
     const aslSeconds = Math.floor(new Date(asl).getTime() / 1000);
@@ -38,7 +38,7 @@ export async function getTcrDetails() {
 
     // converting the Balance type to value string
     const mdTokens = JSON.stringify(md);
-    
+
     return { aslSeconds, cslSeconds, mdTokens };
 }
 
@@ -59,21 +59,26 @@ export async function applyListing(seed, name, deposit) {
 
         // create, sign and send transaction
         api.tx.tcr
-        // create transaction
-        .propose(name, deposit)
-        // Sign and send the transcation
-        .signAndSend(keys, ({ events = [], status, type }) => {
-            console.log('Transaction status:', type);
+            // create transaction
+            .propose(name, deposit)
+            // Sign and send the transcation
+            .signAndSend(keys, ({ events = [], status, type }) => {
 
-            if (type === 'Finalised') {
-                console.log('Completed at block hash', status.asFinalised.toHex());
-                console.log('Events:');
+                if (type === 'Finalised') {
+                    console.log('Completed at block hash', status.asFinalised.toHex());
 
-                events.forEach(({ phase, event: { data, method, section } }) => {
-                    console.log('\t', phase.toString(), `: ${section}.${method}`, data.toString());
-                });
-            }
-        })
-        .catch(err => reject(err));
+                    events.forEach(({ phase, event: { data, method, section } }) => {
+                        console.log('\t', phase.toString(), `: ${section}.${method}`, data.toString());
+                        // check if the tcr proposed event was emitted by Substrate runtime
+                        if (section.toString() === "tcr" && method.toString() === "Proposed") {
+                            // TODO: insert metadata in off-chain store
+                            
+                            // if yes, resolve with event data
+                            resolve(data.toString());
+                        }
+                    });
+                }
+            })
+            .catch(err => reject(err));
     });
 }

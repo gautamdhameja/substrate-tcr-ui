@@ -24,7 +24,7 @@ class App extends Component {
   }
 
   componentDidMount() {
-    service.main().then((connect) => {
+    service.connect().then((connect) => {
       this.setState({
         connection: connect
       });
