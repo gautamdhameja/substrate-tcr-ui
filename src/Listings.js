@@ -17,7 +17,7 @@ class ListingItem extends Component {
     }
 
     render() {
-        const { name, deposit, isWhitelisted, owner } = this.props;
+        const { name, deposit, isWhitelisted, owner, hash } = this.props;
         return (<Item>
             <Item.Image className='text-center' style={{display: 'flex', justifyContent: 'center', alignItems: 'center', maxWidth: 80}}>
                 <Icon name={ isWhitelisted? 'check circle outline' : 'circle outline' } size='huge' />
@@ -27,6 +27,7 @@ class ListingItem extends Component {
                 <Item.Meta>
                     <Label>Deposit: <b>{deposit}</b></Label>
                     <Label>Owner: <b>{owner}</b></Label>
+                    <Label>Hash: <b>{hash}</b></Label>
                 </Item.Meta>
                 <Item.Extra>
                     <Button basic color='green' size='mini' floated='right' onClick={async () => this.resolve(name)}>Resolve</Button>

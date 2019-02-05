@@ -2,10 +2,12 @@ const { ApiPromise } = require('@polkadot/api');
 const { WsProvider } = require('@polkadot/rpc-provider');
 const { Keyring } = require('@polkadot/keyring');
 const { stringToU8a } = require('@polkadot/util');
+const dataService = require('./dataService');
 
 // Initialise the websocket provider to connect to the Substrate node
 const provider = new WsProvider(process.env.REACT_APP_SUBSTRATE_ADDR);
 
+// connects to the substrate node
 export async function connect() {
     const api = await ApiPromise.create(provider);
 
@@ -21,6 +23,7 @@ export async function connect() {
     return { chain, name, version };
 }
 
+// gets TCR parameters from the chain storage
 export async function getTcrDetails() {
     const api = await ApiPromise.create(provider);
 
@@ -42,8 +45,9 @@ export async function getTcrDetails() {
     return { aslSeconds, cslSeconds, mdTokens };
 }
 
+// gets all listings from the off-chain storage
 export async function getAllListings() {
-    return [];
+    return dataService.getAllListings();
 }
 
 // apply for a new listing
@@ -67,14 +71,23 @@ export async function applyListing(seed, name, deposit) {
                 if (type === 'Finalised') {
                     console.log('Completed at block hash', status.asFinalised.toHex());
 
-                    events.forEach(({ phase, event: { data, method, section } }) => {
+                    events.forEach(async ({ phase, event: { data, method, section } }) => {
                         console.log('\t', phase.toString(), `: ${section}.${method}`, data.toString());
                         // check if the tcr proposed event was emitted by Substrate runtime
                         if (section.toString() === "tcr" && method.toString() === "Proposed") {
-                            // TODO: insert metadata in off-chain store
-                            
-                            // if yes, resolve with event data
-                            resolve(data.toString());
+                            // insert metadata in off-chain store
+                            const datajson = JSON.parse(data.toString());
+                            const listingInstance = {
+                                name: name,
+                                hash: datajson[1],
+                                owner: datajson[0],
+                                deposit: datajson[2],
+                                isWhitelisted: false
+                            }
+                            await dataService.insertListing(listingInstance);
+
+                            // resolve the promise with listing data
+                            resolve(listingInstance);
                         }
                     });
                 }
