@@ -5,7 +5,7 @@ const { stringToU8a } = require('@polkadot/util');
 const dataService = require('./dataService');
 
 // Initialise the websocket provider to connect to the Substrate node
-const provider = new WsProvider(process.env.REACT_APP_SUBSTRATE_ADDR);
+const provider = new WsProvider(process.env.REACT_APP_SUBSTRATE_ADDR, true);
 
 // connects to the substrate node
 export async function connect() {
@@ -27,7 +27,6 @@ export async function connect() {
 export async function getTcrDetails() {
     const api = await ApiPromise.create(provider);
 
-    // Make our basic chain state/storage queries, all in one go
     const [asl, csl, md] = await Promise.all([
         api.query.tcr.applyStageLen(),
         api.query.tcr.commitStageLen(),
@@ -94,4 +93,17 @@ export async function applyListing(seed, name, deposit) {
             })
             .catch(err => reject(err));
     });
+}
+
+// gets the token balance for an account
+// this is the TCR token balance and not the Substrate balances module balance
+export async function getBalance(seed) {
+    const keyring = new Keyring();
+    const paddedSeed = seed.padEnd(32);
+    const keys = keyring.addFromSeed(stringToU8a(paddedSeed));
+
+    const api = await ApiPromise.create();
+    const balance = await api.query.token.balanceOf(keys.address());
+
+    return JSON.stringify(balance);
 }

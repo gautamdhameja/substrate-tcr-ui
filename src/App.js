@@ -1,4 +1,5 @@
 import React, { Component } from 'react';
+import { Row, Col, Button } from 'reactstrap';
 import Listings from './Listings'
 import Popup from './Popup';
 import './App.css';
@@ -17,14 +18,19 @@ class App extends Component {
       },
       listings: [],
       modal: false,
-      inProgress: false
+      inProgress: false,
+      seed: "",
+      balance: 0
     };
+
     this.applyListing = this.applyListing.bind(this);
+    this.getSeedBalance = this.getSeedBalance.bind(this);
     this.handleSubmit = this.handleSubmit.bind(this);
     this.toggle = this.toggle.bind(this);
   }
 
   componentDidMount() {
+    this.getSeedBalance();
     service.connect().then((connect) => {
       this.setState({
         connection: connect
@@ -48,9 +54,9 @@ class App extends Component {
     });
   }
 
-  async applyListing(seed, name, deposit) {
+  applyListing(name, deposit) {
     this.setState({ inProgress: true });
-    service.applyListing(seed, name, deposit).then((result) => {
+    service.applyListing(this.state.seed, name, deposit).then((result) => {
       console.log(result);
       this.setState({ inProgress: false });
       this.toggle();
@@ -58,9 +64,29 @@ class App extends Component {
     });
   }
 
-  async handleSubmit(event) {
+  handleSubmit(event) {
     event.preventDefault();
     this.getAllListings();
+  }
+
+  handleSeedChange(event) {
+    this.setState({ seed: event.target.value });
+  }
+
+  saveSeed(event) {
+    event.preventDefault();
+    localStorage.setItem("seed", this.state.seed);
+    this.getBalance();
+  }
+
+  getSeedBalance() {
+    const localSeed = localStorage.getItem("seed");
+    if (localSeed) {
+      service.getBalance(localSeed)
+        .then((result) => {
+          this.setState({ balance: result, seed: localSeed });
+        });
+    }
   }
 
   getAllListings() {
@@ -88,14 +114,33 @@ class App extends Component {
           <div className="alert alert-primary text-left">
             <div>
               <div className="alert alert-success">
-                <b>Connection Details</b>
-                <br /> <br />
                 Chain: <b>{this.state.connection.chain}</b>; Node Name: <b>{this.state.connection.name}</b>; Version: <b>{this.state.connection.version}</b>
               </div>
-              <p><b>TCR Parameters</b></p>
-              <p>Minimum Deposit (tokens): <b>{this.state.tcrDetails.minDeposit}</b></p>
-              <p>Apply Stage Period (seconds): <b>{this.state.tcrDetails.applyStageLen}</b></p>
-              <p>Commit Stage Period (seconds): <b>{this.state.tcrDetails.commitStageLen}</b></p>
+              <Row>
+                <Col>
+                  <p><b>TCR Parameters</b></p>
+                  <p>Minimum Deposit (tokens): <b>{this.state.tcrDetails.minDeposit}</b></p>
+                  <p>Apply Stage Period (seconds): <b>{this.state.tcrDetails.applyStageLen}</b></p>
+                  <p>Commit Stage Period (seconds): <b>{this.state.tcrDetails.commitStageLen}</b></p>
+                </Col>
+                <Col>
+                  <p><b>Set Passphrase</b></p>
+                  <Row>
+                    <Col xs="10">
+                      <input type="text" name="seed" id="seed" className="form-control" value={this.state.seed} onChange={this.handleSeedChange.bind(this)} />
+                    </Col>
+                    <Col xs="2">
+                      <button className="btn btn-primary" onClick={this.saveSeed.bind(this)}>Save</button>
+                    </Col>
+                  </Row>
+                  <Row>
+                    <Col>
+                      Token Balance: <b>{this.state.balance}</b>
+                      <button className="btn btn-link" onClick={this.getSeedBalance}>refresh</button>
+                    </Col>
+                  </Row>
+                </Col>
+              </Row>
             </div>
           </div>
           <br />

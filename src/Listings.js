@@ -23,11 +23,12 @@ class ListingItem extends Component {
                 <Icon name={ isWhitelisted? 'check circle outline' : 'circle outline' } size='huge' />
             </Item.Image>
             <Item.Content>
-                <Item.Header><b>{name}</b></Item.Header>
+                <Item.Header>{name}</Item.Header>
                 <Item.Meta>
-                    <Label>Deposit: <b>{deposit}</b></Label>
-                    <Label>Owner: <b>{owner}</b></Label>
-                    <Label>Hash: <b>{hash}</b></Label>
+                    <b>Owner:</b> <Label>{owner}</Label>
+                    <br/> <br/>
+                    <b>Hash:</b> <Label>{hash}</Label>
+                    <b>Deposit:</b> <Label>{deposit}</Label>
                 </Item.Meta>
                 <Item.Extra>
                     <Button basic color='green' size='mini' floated='right' onClick={async () => this.resolve(hash)}>Resolve</Button>

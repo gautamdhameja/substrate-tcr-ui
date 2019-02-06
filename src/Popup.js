@@ -5,16 +5,11 @@ class Popup extends Component {
     constructor(props) {
         super(props);
         this.state = {
-            seed: "",
             listingName: "",
             listingDeposit: "",
         }
 
         this.handleSubmit = this.handleSubmit.bind(this);
-    }
-
-    handleSeedChange(event) {
-        this.setState({ seed: event.target.value });
     }
 
     handleNameChange(event) {
@@ -26,7 +21,7 @@ class Popup extends Component {
     }
 
     handleSubmit() {
-        this.props.submit(this.state.seed, this.state.listingName, this.state.listingDeposit);
+        this.props.submit(this.state.listingName, this.state.listingDeposit);
     }
 
     render() {
@@ -35,9 +30,6 @@ class Popup extends Component {
                 <ModalHeader toggle={this.props.toggle}>{this.props.header}</ModalHeader>
                 <ModalBody>
                     <div>
-                        <label htmlFor="seed">Seed</label>
-                        <input type="text" name="seed" id="seed" className="form-control" value={this.state.seed} onChange={this.handleSeedChange.bind(this)} />
-                        <br />
                         <label htmlFor="listingName">Listing Data</label>
                         <input type="text" name="listingName" id="listingName" className="form-control" value={this.state.listingName} onChange={this.handleNameChange.bind(this)} />
                         <br />
