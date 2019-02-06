@@ -30,3 +30,9 @@ export async function updateListing(listing) {
     }
     localStorage.setItem("listings", JSON.stringify(listings));
 }
+
+// get an item from the listings storage
+export async function getListing(hash) {
+    const listings = JSON.parse(localStorage.getItem("listings"));
+    return listings.find(function(e) { return e.hash === hash });
+}

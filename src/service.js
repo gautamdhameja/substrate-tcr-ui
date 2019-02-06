@@ -5,7 +5,7 @@ const { stringToU8a } = require('@polkadot/util');
 const dataService = require('./dataService');
 
 // Initialise the websocket provider to connect to the Substrate node
-const provider = new WsProvider(process.env.REACT_APP_SUBSTRATE_ADDR, true);
+const provider = new WsProvider(process.env.REACT_APP_SUBSTRATE_ADDR);
 
 // connects to the substrate node
 export async function connect() {
@@ -106,4 +106,91 @@ export async function getBalance(seed) {
     const balance = await api.query.token.balanceOf(keys.address());
 
     return JSON.stringify(balance);
+}
+
+// challenge a listing
+export async function challengeListing(hash, deposit) {
+    return new Promise(async (resolve, reject) => {
+        // create an API promise object
+        const api = await ApiPromise.create();
+
+        // add keypair from the seed to the keyring
+        const seed = localStorage.getItem("seed");
+        const keyring = new Keyring();
+        const paddedSeed = seed.padEnd(32);
+        const keys = keyring.addFromSeed(stringToU8a(paddedSeed));
+
+        // TODO: fix type cast
+        const listing = await api.query.tcr.listings(hash);
+
+        // create, sign and send transaction
+        api.tx.tcr
+            // create transaction
+            .challenge(listing.id, deposit)
+            // Sign and send the transcation
+            .signAndSend(keys, ({ events = [], status, type }) => {
+                if (type === 'Finalised') {
+                    console.log('Completed at block hash', status.asFinalised.toHex());
+                    events.forEach(async ({ phase, event: { data, method, section } }) => {
+                        console.log('\t', phase.toString(), `: ${section}.${method}`, data.toString());
+                        // check if the tcr proposed event was emitted by Substrate runtime
+                        if (section.toString() === "tcr" && method.toString() === "Challenged") {
+                            const datajson = JSON.parse(data.toString());
+                            // resolve the promise with challenge data
+                            resolve(datajson);
+                        }
+                    });
+                }
+            })
+            .catch(err => reject(err));
+    });
+}
+
+// vote on a challenged listing
+export async function voteListing(hash, deposit) {
+    console.log(hash, deposit);
+    return hash;
+}
+
+// resolve a listing
+export async function resolveListing(hash) {
+    return new Promise(async (resolve, reject) => {
+        // create an API promise object
+        const api = await ApiPromise.create();
+
+        // add keypair from the seed to the keyring
+        const seed = localStorage.getItem("seed");
+        const keyring = new Keyring();
+        const paddedSeed = seed.padEnd(32);
+        const keys = keyring.addFromSeed(stringToU8a(paddedSeed));
+
+        // // TODO: fix type cast
+        // const listing = await api.query.tcr.listings(hash);
+
+        // create, sign and send transaction
+        api.tx.tcr
+            // create transaction
+            .resolve(0)
+            // Sign and send the transcation
+            .signAndSend(keys, ({ events = [], status, type }) => {
+                if (type === 'Finalised') {
+                    console.log('Completed at block hash', status.asFinalised.toHex());
+                    events.forEach(async ({ phase, event: { data, method, section } }) => {
+                        console.log('\t', phase.toString(), `: ${section}.${method}`, data.toString());
+                        // check if the tcr proposed event was emitted by Substrate runtime
+                        if (section.toString() === "tcr" && 
+                            method.toString() === "Accepted") {
+                            // if accepted, updated listing status
+                            // TODO: fix this
+                            const datajson = JSON.parse(data.toString());
+                            const listing = dataService.getListing(hash);
+                            listing.isWhitelisted = true;
+                            dataService.updateListing(listing);
+                            resolve(datajson);
+                        }
+                    });
+                }
+            })
+            .catch(err => reject(err));
+    });
 }

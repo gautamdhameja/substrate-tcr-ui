@@ -1,7 +1,7 @@
 import React, { Component } from 'react';
-import { Row, Col, Button } from 'reactstrap';
+import { Row, Col } from 'reactstrap';
 import Listings from './Listings'
-import Popup from './Popup';
+import ApplyPopup from './modals/Apply';
 import './App.css';
 
 import * as service from './service';
@@ -106,7 +106,7 @@ class App extends Component {
   render() {
     return (
       <div>
-        <Popup modal={this.state.modal} submit={this.applyListing} toggle={this.toggle} header={"Apply Listing"} inProgress={this.state.inProgress} />
+        <ApplyPopup modal={this.state.modal} submit={this.applyListing} toggle={this.toggle} header={"Apply Listing"} inProgress={this.state.inProgress} />
         <div className="container text-center">
           <br />
           <p className="h2">Substrate TCR</p>
@@ -124,10 +124,10 @@ class App extends Component {
                   <p>Commit Stage Period (seconds): <b>{this.state.tcrDetails.commitStageLen}</b></p>
                 </Col>
                 <Col>
-                  <p><b>Set Passphrase</b></p>
+                  <p><b>Passphrase</b></p>
                   <Row>
                     <Col xs="10">
-                      <input type="text" name="seed" id="seed" className="form-control" value={this.state.seed} onChange={this.handleSeedChange.bind(this)} />
+                      <input type="text" name="seed" id="seed" className="form-control" value={this.state.seed}     onChange={this.handleSeedChange.bind(this)} />
                     </Col>
                     <Col xs="2">
                       <button className="btn btn-primary" onClick={this.saveSeed.bind(this)}>Save</button>
@@ -146,7 +146,7 @@ class App extends Component {
           <br />
           <div className="container text-left">
             <span className="h3">Listings</span>
-            <button className="btn btn-secondary float-right" style={{ marginLeft: 10 }} type="button" onClick={this.handleSubmit}>Get All Listings</button>
+            <button className="btn btn-secondary float-right" style={{ marginLeft: 10 }} type="button" onClick={this.handleSubmit}>Get Listings</button>
             <button className="btn btn-primary float-right" onClick={this.toggle}>Apply Listing</button>
             <br /><br /><br />
             <div className="text-left">
