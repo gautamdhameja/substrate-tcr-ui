@@ -30,6 +30,7 @@ class App extends Component {
   }
 
   componentDidMount() {
+    // localStorage.setItem("listings", JSON.stringify([]));
     this.getSeedBalance();
     service.connect().then((connect) => {
       this.setState({
@@ -56,7 +57,7 @@ class App extends Component {
 
   applyListing(name, deposit) {
     this.setState({ inProgress: true });
-    service.applyListing(this.state.seed, name, deposit).then((result) => {
+    service.applyListing(name, deposit).then((result) => {
       console.log(result);
       this.setState({ inProgress: false });
       this.toggle();
@@ -76,7 +77,7 @@ class App extends Component {
   saveSeed(event) {
     event.preventDefault();
     localStorage.setItem("seed", this.state.seed);
-    this.getBalance();
+    this.getSeedBalance();
   }
 
   getSeedBalance() {

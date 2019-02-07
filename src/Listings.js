@@ -1,6 +1,7 @@
 import React, { Component } from 'react';
 import { Item, Label, Icon, Button } from 'semantic-ui-react';
 import ChallengePopup from './modals/Challenge';
+import VotePopup from './modals/Vote';
 
 import * as service from './service';
 
@@ -38,16 +39,20 @@ class ListingItem extends Component {
                 this.inProgress = false;
                 this.challengeToggle();
                 console.log(result);
-            });
+            }).catch((err) => {
+                alert(err.message);
+            });;
     }
 
-    vote(deposit) {
+    vote(voteVal, deposit) {
         this.inProgress = true;
-        service.voteListing(this.props.hash, deposit)
+        service.voteListing(this.props.hash, voteVal, deposit)
             .then((result) => {
                 this.inProgress = false;
                 this.voteToggle();
                 console.log(result);
+            }).catch((err) => {
+                alert(err.message);
             });
     }
 
@@ -56,7 +61,9 @@ class ListingItem extends Component {
             .then((result) => {
                 this.inProgress = false;
                 console.log(result);
-            });
+            }).catch((err) => {
+                alert(err.message);
+            });;
     }
 
     render() {
@@ -64,7 +71,7 @@ class ListingItem extends Component {
         return (
             <Item>
                 <ChallengePopup modal={this.state.modal} submit={this.challenge} toggle={this.challengeToggle} header={"Challenge Listing: " + name} inProgress={this.state.inProgress} />
-                <ChallengePopup modal={this.state.voteModal} submit={this.vote} toggle={this.voteToggle} header={"Vote Listing: " + name} inProgress={this.state.inProgress} />
+                <VotePopup modal={this.state.voteModal} submit={this.vote} toggle={this.voteToggle} header={"Vote Listing: " + name} inProgress={this.state.inProgress} />
                 <Item.Image className='text-center' style={{ display: 'inline', justifyContent: 'center', alignItems: 'center', maxWidth: 80 }}>
                     <Icon name={isWhitelisted ? 'check circle outline' : 'circle outline'} size='huge' />
                 </Item.Image>

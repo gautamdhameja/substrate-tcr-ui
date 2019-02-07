@@ -22,9 +22,10 @@ export async function getAllListings() {
 
 // update a listing object in local storage
 // replaces if the object is found with same listing hash
-export async function updateListing(listing) {
+export function updateListing(listing) {
     const listings = JSON.parse(localStorage.getItem("listings"));
     const index = listings.findIndex(function (e) { return e.hash === listing.hash });
+    console.log(index);
     if (index > -1) {
         listings.splice(index, 1, listing)
     }
@@ -32,7 +33,7 @@ export async function updateListing(listing) {
 }
 
 // get an item from the listings storage
-export async function getListing(hash) {
+export function getListing(hash) {
     const listings = JSON.parse(localStorage.getItem("listings"));
     return listings.find(function(e) { return e.hash === hash });
 }

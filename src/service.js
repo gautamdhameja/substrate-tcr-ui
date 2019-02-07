@@ -5,11 +5,11 @@ const { stringToU8a } = require('@polkadot/util');
 const dataService = require('./dataService');
 
 // Initialise the websocket provider to connect to the Substrate node
-const provider = new WsProvider(process.env.REACT_APP_SUBSTRATE_ADDR);
+const wsProvider = new WsProvider(process.env.REACT_APP_SUBSTRATE_ADDR);
 
 // connects to the substrate node
 export async function connect() {
-    const api = await ApiPromise.create(provider);
+    const api = await ApiPromise.create(wsProvider);
 
     // Retrieve the chain & node information information via rpc calls
     const [chain, name, version] = await Promise.all([
@@ -25,7 +25,7 @@ export async function connect() {
 
 // gets TCR parameters from the chain storage
 export async function getTcrDetails() {
-    const api = await ApiPromise.create(provider);
+    const api = await ApiPromise.create(wsProvider);
 
     const [asl, csl, md] = await Promise.all([
         api.query.tcr.applyStageLen(),
@@ -50,15 +50,10 @@ export async function getAllListings() {
 }
 
 // apply for a new listing
-export async function applyListing(seed, name, deposit) {
+export async function applyListing(name, deposit) {
     return new Promise(async (resolve, reject) => {
-        // create an API promise object
         const api = await ApiPromise.create();
-
-        // add keypair from the seed to the keyring
-        const keyring = new Keyring();
-        const paddedSeed = seed.padEnd(32);
-        const keys = keyring.addFromSeed(stringToU8a(paddedSeed));
+        const keys = _getKeysFromSeed();
 
         // create, sign and send transaction
         api.tx.tcr
@@ -81,7 +76,8 @@ export async function applyListing(seed, name, deposit) {
                                 hash: datajson[1],
                                 owner: datajson[0],
                                 deposit: datajson[2],
-                                isWhitelisted: false
+                                isWhitelisted: false,
+                                challengeId: 0
                             }
                             await dataService.insertListing(listingInstance);
 
@@ -98,35 +94,25 @@ export async function applyListing(seed, name, deposit) {
 // gets the token balance for an account
 // this is the TCR token balance and not the Substrate balances module balance
 export async function getBalance(seed) {
-    const keyring = new Keyring();
-    const paddedSeed = seed.padEnd(32);
-    const keys = keyring.addFromSeed(stringToU8a(paddedSeed));
-
+    const keys = _getKeysFromSeed(seed);
     const api = await ApiPromise.create();
     const balance = await api.query.token.balanceOf(keys.address());
-
     return JSON.stringify(balance);
 }
 
 // challenge a listing
 export async function challengeListing(hash, deposit) {
     return new Promise(async (resolve, reject) => {
-        // create an API promise object
-        const api = await ApiPromise.create();
+        const api = await _createApiWithTypes();
+        const keys = _getKeysFromSeed();
 
-        // add keypair from the seed to the keyring
-        const seed = localStorage.getItem("seed");
-        const keyring = new Keyring();
-        const paddedSeed = seed.padEnd(32);
-        const keys = keyring.addFromSeed(stringToU8a(paddedSeed));
-
-        // TODO: fix type cast
         const listing = await api.query.tcr.listings(hash);
+        const listingJson = JSON.parse(listing.toString());
 
         // create, sign and send transaction
         api.tx.tcr
             // create transaction
-            .challenge(listing.id, deposit)
+            .challenge(listingJson.id, deposit)
             // Sign and send the transcation
             .signAndSend(keys, ({ events = [], status, type }) => {
                 if (type === 'Finalised') {
@@ -136,6 +122,10 @@ export async function challengeListing(hash, deposit) {
                         // check if the tcr proposed event was emitted by Substrate runtime
                         if (section.toString() === "tcr" && method.toString() === "Challenged") {
                             const datajson = JSON.parse(data.toString());
+                            // update local listing with challenge id
+                            const localListing = dataService.getListing(hash);
+                            localListing.challengeId = datajson[2];
+                            dataService.updateListing(localListing);
                             // resolve the promise with challenge data
                             resolve(datajson);
                         }
@@ -147,30 +137,61 @@ export async function challengeListing(hash, deposit) {
 }
 
 // vote on a challenged listing
-export async function voteListing(hash, deposit) {
-    console.log(hash, deposit);
-    return hash;
+export async function voteListing(hash, voteValue, deposit) {
+    return new Promise(async (resolve, reject) => {
+        const api = await _createApiWithTypes();
+        const keys = _getKeysFromSeed();
+
+        const listing = await api.query.tcr.listings(hash);
+        const listingJson = JSON.parse(listing.toString());
+
+        // check if listing is currently challenged
+        if (listingJson.challenge_id > 0) {
+            // create, sign and send transaction
+            api.tx.tcr
+                // create transaction
+                .vote(listingJson.challenge_id, voteValue, deposit)
+                // Sign and send the transcation
+                .signAndSend(keys, ({ events = [], status, type }) => {
+                    if (type === 'Finalised') {
+                        console.log('Completed at block hash', status.asFinalised.toHex());
+                        events.forEach(async ({ phase, event: { data, method, section } }) => {
+                            console.log('\t', phase.toString(), `: ${section}.${method}`, data.toString());
+                            // check if the tcr proposed event was emitted by Substrate runtime
+                            if (section.toString() === "tcr" &&
+                                method.toString() === "Accepted") {
+                                // if accepted, updated listing status
+                                const datajson = JSON.parse(data.toString());
+                                const localListing = dataService.getListing(hash);
+                                localListing.isWhitelisted = true;
+                                localListing.challengeId = 0;
+                                dataService.updateListing(localListing);
+                                // resolve with event data
+                                resolve(datajson);
+                            }
+                        });
+                    }
+                })
+                .catch(err => reject(err));
+        } else {
+            reject(new Error("Listing is not currently challenged."));
+        }
+    });
 }
 
 // resolve a listing
 export async function resolveListing(hash) {
     return new Promise(async (resolve, reject) => {
-        // create an API promise object
-        const api = await ApiPromise.create();
+        const api = await _createApiWithTypes();
+        const keys = _getKeysFromSeed();
 
-        // add keypair from the seed to the keyring
-        const seed = localStorage.getItem("seed");
-        const keyring = new Keyring();
-        const paddedSeed = seed.padEnd(32);
-        const keys = keyring.addFromSeed(stringToU8a(paddedSeed));
-
-        // // TODO: fix type cast
-        // const listing = await api.query.tcr.listings(hash);
+        const listing = await api.query.tcr.listings(hash);
+        const listingJson = JSON.parse(listing.toString());
 
         // create, sign and send transaction
         api.tx.tcr
             // create transaction
-            .resolve(0)
+            .resolve(listingJson.id)
             // Sign and send the transcation
             .signAndSend(keys, ({ events = [], status, type }) => {
                 if (type === 'Finalised') {
@@ -178,14 +199,15 @@ export async function resolveListing(hash) {
                     events.forEach(async ({ phase, event: { data, method, section } }) => {
                         console.log('\t', phase.toString(), `: ${section}.${method}`, data.toString());
                         // check if the tcr proposed event was emitted by Substrate runtime
-                        if (section.toString() === "tcr" && 
+                        if (section.toString() === "tcr" &&
                             method.toString() === "Accepted") {
                             // if accepted, updated listing status
-                            // TODO: fix this
                             const datajson = JSON.parse(data.toString());
-                            const listing = dataService.getListing(hash);
-                            listing.isWhitelisted = true;
-                            dataService.updateListing(listing);
+                            const localListing = dataService.getListing(hash);
+                            localListing.isWhitelisted = true;
+                            localListing.challengeId = 0;
+                            dataService.updateListing(localListing);
+                            // resolve with event data
                             resolve(datajson);
                         }
                     });
@@ -193,4 +215,57 @@ export async function resolveListing(hash) {
             })
             .catch(err => reject(err));
     });
+}
+
+// create an API promise object with custom types
+async function _createApiWithTypes() {
+    return await ApiPromise.create({
+        types: {
+            Listing: {
+                "id": "u32",
+                "data": "Vec<u8>",
+                "deposit": "Balance",
+                "owner": "AccountId",
+                "application_expiry": "Moment",
+                "whitelisted": "bool",
+                "challenge_id": "u32"
+            },
+            Challenge: {
+                "listing_hash": "Hash",
+                "deposit": "Balance",
+                "owner": "AccountId",
+                "voting_ends": "Moment",
+                "resolved": "bool",
+                "reward_pool": "Balance",
+                "total_tokens": "Balance"
+            },
+            Poll: {
+                "listing_hash": "Hash",
+                "votes_for": "Balance",
+                "votes_against": "Balance",
+                "passed": "bool"
+            },
+            Vote: {
+                "value": "bool",
+                "deposit": "Balance",
+                "claimed": "bool"
+            }
+        }
+    });
+}
+
+// get keypair from passed or locally stored seed
+function _getKeysFromSeed(seed) {
+    let _seed = seed;
+    if(!seed) {
+        _seed = localStorage.getItem("seed");
+    }
+
+    if(!_seed) {
+        throw new Error("Seed not found.");
+    }
+
+    const keyring = new Keyring();
+    const paddedSeed = _seed.padEnd(32);
+    return keyring.addFromSeed(stringToU8a(paddedSeed));
 }

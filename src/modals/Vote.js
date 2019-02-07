@@ -1,27 +1,33 @@
 import React, { Component } from 'react';
 import { Button, Modal, ModalHeader, ModalBody, ModalFooter, Spinner } from 'reactstrap';
 
-class ApplyPopup extends Component {
+class VotePopup extends Component {
     constructor(props) {
         super(props);
         this.state = {
-            listingName: "",
-            listingDeposit: "",
+            deposit: "",
+            voteVal: ""
         }
 
         this.handleSubmit = this.handleSubmit.bind(this);
     }
 
-    handleNameChange(event) {
-        this.setState({ listingName: event.target.value });
+    handleVoteValChange(event) {
+        this.setState({ voteVal: event.target.value });
     }
 
     handleDepositChange(event) {
-        this.setState({ listingDeposit: event.target.value });
+        this.setState({ deposit: event.target.value });
     }
 
     handleSubmit() {
-        this.props.submit(this.state.listingName, this.state.listingDeposit);
+        if (this.state.voteVal === 'aye') {
+            this.props.submit(true, this.state.deposit);
+        } else if (this.state.voteVal === 'nay') {
+            this.props.submit(false, this.state.deposit);
+        } else {
+            alert("Please enter correct values.");
+        }
     }
 
     render() {
@@ -30,17 +36,17 @@ class ApplyPopup extends Component {
                 <ModalHeader toggle={this.props.toggle}>{this.props.header}</ModalHeader>
                 <ModalBody>
                     <div>
-                        <label htmlFor="listingName">Listing Name</label>
-                        <input type="text" name="listingName" id="listingName" className="form-control" value={this.state.listingName} onChange={this.handleNameChange.bind(this)} />
-                        <br />
                         <label htmlFor="listingDeposit">Deposit</label>
-                        <input type="text" name="listingDeposit" id="listingDeposit" className="form-control" value={this.state.listingDeposit} onChange={this.handleDepositChange.bind(this)} />
+                        <input type="text" name="listingDeposit" className="form-control" value={this.state.deposit} onChange={this.handleDepositChange.bind(this)} />
+                        <br />
+                        <label htmlFor="voteValue">Vote Value (only aye or nay)</label>
+                        <input type="text" name="voteValue" className="form-control" value={this.state.voteVal} onChange={this.handleVoteValChange.bind(this)} />
                     </div>
                 </ModalBody>
                 <ModalFooter>
                     <div className="center">
-                        { 
-                            this.props.inProgress && 
+                        {
+                            this.props.inProgress &&
                             <Spinner color="primary" />
                         }
                     </div>
@@ -52,4 +58,4 @@ class ApplyPopup extends Component {
     }
 }
 
-export default ApplyPopup;
+export default VotePopup;
