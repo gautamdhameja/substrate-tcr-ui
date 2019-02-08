@@ -1,5 +1,5 @@
 import React, { Component } from 'react';
-import { Item, Label, Icon, Button } from 'semantic-ui-react';
+import { Item, Icon, Button } from 'semantic-ui-react';
 import ChallengePopup from '../modals/Challenge';
 import VotePopup from '../modals/Vote';
 
@@ -13,9 +13,11 @@ class ListingItem extends Component {
             voteModal: false,
             inProgress: false
         };
+
         this.challenge = this.challenge.bind(this);
         this.resolve = this.resolve.bind(this);
         this.vote = this.vote.bind(this);
+        this.claim = this.claim.bind(this);
         this.challengeToggle = this.challengeToggle.bind(this);
         this.voteToggle = this.voteToggle.bind(this);
     }
@@ -66,22 +68,51 @@ class ListingItem extends Component {
             });;
     }
 
+    claim() {
+
+    }
+
+    getIcon(isWhitelisted, rejected) {
+        if (!isWhitelisted && rejected) {
+            return 'times circle outline';
+        }
+
+        if (isWhitelisted && !rejected) {
+            return 'check circle outline';
+        }
+
+        return 'question circle outline';
+    }
+
+    getColor(isWhitelisted, rejected, challengeId) {
+        if (challengeId > 0) {
+            return 'brown';
+        }
+
+        if (isWhitelisted && !rejected) {
+            return 'green';
+        }
+
+        if (!isWhitelisted && rejected) {
+            return 'red';
+        }
+
+        return 'blue';
+    }
+
     render() {
-        const { name, deposit, isWhitelisted, owner, hash, challengeId } = this.props;
+        const { name, deposit, isWhitelisted, owner, hash, challengeId, rejected } = this.props;
         return (
             <Item>
                 <ChallengePopup modal={this.state.modal} submit={this.challenge} toggle={this.challengeToggle} header={"Challenge Listing: " + name} inProgress={this.state.inProgress} />
                 <VotePopup modal={this.state.voteModal} submit={this.vote} toggle={this.voteToggle} header={"Vote Listing: " + name} inProgress={this.state.inProgress} />
                 <Item.Image className='text-center' style={{ display: 'inline', justifyContent: 'center', alignItems: 'center', maxWidth: 80 }}>
-                    <Icon name={isWhitelisted ? 'check circle outline' : 'circle outline'} basic color='blue' size='huge' />
+                    <Icon name={this.getIcon(isWhitelisted, rejected)} basic color={this.getColor(isWhitelisted, rejected, challengeId)} size='huge' />
                 </Item.Image>
                 <Item.Content>
                     <Item.Header>
                         <span>{name}</span>
                     </Item.Header>
-                    <Item.Meta>
-                        <Icon name={challengeId > 0 && 'minus circle'} basic color='red' size='large' />
-                    </Item.Meta>
                     <Item.Description>
                         <b>Owner:</b> {owner}
                         <br />
@@ -90,9 +121,10 @@ class ListingItem extends Component {
                         <b>Deposit:</b> {deposit}
                     </Item.Description>
                     <Item.Extra>
+                        <Button basic color='brown' size='mini' floated='right' onClick={this.claim}>Claim Reward</Button>
                         <Button basic color='green' size='mini' floated='right' onClick={this.resolve}>Resolve</Button>
-                        <Button basic color='purple' size='mini' floated='right' onClick={this.voteToggle}>Vote</Button>
-                        <Button basic color='blue' size='mini' floated='right' onClick={this.challengeToggle}>Challenge</Button>
+                        <Button basic color='blue' size='mini' floated='right' onClick={this.voteToggle}>Vote</Button>
+                        <Button basic color='red' size='mini' floated='right' onClick={this.challengeToggle}>Challenge</Button>
                     </Item.Extra>
                 </Item.Content>
             </Item>

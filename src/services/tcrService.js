@@ -77,7 +77,8 @@ export async function applyListing(name, deposit) {
                                 owner: datajson[0],
                                 deposit: datajson[2],
                                 isWhitelisted: false,
-                                challengeId: 0
+                                challengeId: 0,
+                                rejected: false,
                             }
                             await dataService.insertListing(listingInstance);
 
@@ -218,6 +219,22 @@ export async function resolveListing(hash) {
                                 data: datajson
                             });
                         }
+
+                        if (section.toString() === "tcr" &&
+                            method.toString() === "Rejected") {
+                            // if accepted, updated listing status
+                            const datajson = JSON.parse(data.toString());
+                            const localListing = dataService.getListing(hash);
+                            localListing.isWhitelisted = false;
+                            localListing.rejected = true;
+                            localListing.challengeId = 0;
+                            dataService.updateListing(localListing);
+                            // resolve with event data
+                            resolve({
+                                tx: status.asFinalised.toHex(),
+                                data: datajson
+                            });
+                        }
                     });
                 }
             })
@@ -265,11 +282,11 @@ async function _createApiWithTypes() {
 // get keypair from passed or locally stored seed
 function _getKeysFromSeed(seed) {
     let _seed = seed;
-    if(!seed) {
+    if (!seed) {
         _seed = localStorage.getItem("seed");
     }
 
-    if(!_seed) {
+    if (!_seed) {
         throw new Error("Seed not found.");
     }
 
