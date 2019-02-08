@@ -1,10 +1,10 @@
 import React, { Component } from 'react';
 import { Row, Col } from 'reactstrap';
-import Listings from './Listings'
+import Listings from './components/Listings'
 import ApplyPopup from './modals/Apply';
 import './App.css';
 
-import * as service from './service';
+import * as service from './services/tcrService';
 
 class App extends Component {
   constructor(props) {
@@ -24,19 +24,25 @@ class App extends Component {
     };
 
     this.applyListing = this.applyListing.bind(this);
-    this.getSeedBalance = this.getSeedBalance.bind(this);
+    this.getBalance = this.getBalance.bind(this);
     this.handleSubmit = this.handleSubmit.bind(this);
     this.toggle = this.toggle.bind(this);
   }
 
   componentDidMount() {
     // localStorage.setItem("listings", JSON.stringify([]));
-    this.getSeedBalance();
+    const localSeed = localStorage.getItem("seed");
+    if (localSeed) {
+      this.getBalance(localSeed);
+      this.setState({ seed: localSeed });
+    }
+
     service.connect().then((connect) => {
       this.setState({
         connection: connect
       });
     });
+
     service.getTcrDetails().then((details) => {
       this.setState({
         tcrDetails: {
@@ -46,6 +52,7 @@ class App extends Component {
         }
       });
     });
+
     this.getAllListings();
   }
 
@@ -77,17 +84,13 @@ class App extends Component {
   saveSeed(event) {
     event.preventDefault();
     localStorage.setItem("seed", this.state.seed);
-    this.getSeedBalance();
+    this.getBalance();
   }
 
-  getSeedBalance() {
-    const localSeed = localStorage.getItem("seed");
-    if (localSeed) {
-      service.getBalance(localSeed)
-        .then((result) => {
-          this.setState({ balance: result, seed: localSeed });
-        });
-    }
+  getBalance(seed) {
+    service.getBalance(seed, (result) => {
+      this.setState({ balance: result });
+    });
   }
 
   getAllListings() {
@@ -128,7 +131,7 @@ class App extends Component {
                   <p><b>Passphrase</b></p>
                   <Row>
                     <Col xs="10">
-                      <input type="text" name="seed" id="seed" className="form-control" value={this.state.seed}     onChange={this.handleSeedChange.bind(this)} />
+                      <input type="text" name="seed" id="seed" className="form-control" value={this.state.seed} onChange={this.handleSeedChange.bind(this)} />
                     </Col>
                     <Col xs="2">
                       <button className="btn btn-primary" onClick={this.saveSeed.bind(this)}>Save</button>
@@ -137,7 +140,6 @@ class App extends Component {
                   <Row>
                     <Col>
                       Token Balance: <b>{this.state.balance}</b>
-                      <button className="btn btn-link" onClick={this.getSeedBalance}>refresh</button>
                     </Col>
                   </Row>
                 </Col>

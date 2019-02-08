@@ -93,11 +93,13 @@ export async function applyListing(name, deposit) {
 
 // gets the token balance for an account
 // this is the TCR token balance and not the Substrate balances module balance
-export async function getBalance(seed) {
+export async function getBalance(seed, callback) {
     const keys = _getKeysFromSeed(seed);
     const api = await ApiPromise.create();
-    const balance = await api.query.token.balanceOf(keys.address());
-    return JSON.stringify(balance);
+    api.query.token.balanceOf(keys.address(), (balance) => {
+        let bal = JSON.stringify(balance);
+        callback(bal);
+    });
 }
 
 // challenge a listing
@@ -118,7 +120,6 @@ export async function challengeListing(hash, deposit) {
                 if (type === 'Finalised') {
                     console.log('Completed at block hash', status.asFinalised.toHex());
                     events.forEach(async ({ phase, event: { data, method, section } }) => {
-                        console.log('\t', phase.toString(), `: ${section}.${method}`, data.toString());
                         // check if the tcr proposed event was emitted by Substrate runtime
                         if (section.toString() === "tcr" && method.toString() === "Challenged") {
                             const datajson = JSON.parse(data.toString());
@@ -127,7 +128,10 @@ export async function challengeListing(hash, deposit) {
                             localListing.challengeId = datajson[2];
                             dataService.updateListing(localListing);
                             // resolve the promise with challenge data
-                            resolve(datajson);
+                            resolve({
+                                tx: status.asFinalised.toHex(),
+                                data: datajson
+                            });
                         }
                     });
                 }
@@ -156,7 +160,6 @@ export async function voteListing(hash, voteValue, deposit) {
                     if (type === 'Finalised') {
                         console.log('Completed at block hash', status.asFinalised.toHex());
                         events.forEach(async ({ phase, event: { data, method, section } }) => {
-                            console.log('\t', phase.toString(), `: ${section}.${method}`, data.toString());
                             // check if the tcr proposed event was emitted by Substrate runtime
                             if (section.toString() === "tcr" &&
                                 method.toString() === "Accepted") {
@@ -167,7 +170,10 @@ export async function voteListing(hash, voteValue, deposit) {
                                 localListing.challengeId = 0;
                                 dataService.updateListing(localListing);
                                 // resolve with event data
-                                resolve(datajson);
+                                resolve({
+                                    tx: status.asFinalised.toHex(),
+                                    data: datajson
+                                });
                             }
                         });
                     }
@@ -197,7 +203,6 @@ export async function resolveListing(hash) {
                 if (type === 'Finalised') {
                     console.log('Completed at block hash', status.asFinalised.toHex());
                     events.forEach(async ({ phase, event: { data, method, section } }) => {
-                        console.log('\t', phase.toString(), `: ${section}.${method}`, data.toString());
                         // check if the tcr proposed event was emitted by Substrate runtime
                         if (section.toString() === "tcr" &&
                             method.toString() === "Accepted") {
@@ -208,7 +213,10 @@ export async function resolveListing(hash) {
                             localListing.challengeId = 0;
                             dataService.updateListing(localListing);
                             // resolve with event data
-                            resolve(datajson);
+                            resolve({
+                                tx: status.asFinalised.toHex(),
+                                data: datajson
+                            });
                         }
                     });
                 }

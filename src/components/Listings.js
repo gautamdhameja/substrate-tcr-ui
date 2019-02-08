@@ -1,9 +1,9 @@
 import React, { Component } from 'react';
 import { Item, Label, Icon, Button } from 'semantic-ui-react';
-import ChallengePopup from './modals/Challenge';
-import VotePopup from './modals/Vote';
+import ChallengePopup from '../modals/Challenge';
+import VotePopup from '../modals/Vote';
 
-import * as service from './service';
+import * as service from '../services/tcrService';
 
 class ListingItem extends Component {
     constructor(props) {
@@ -67,22 +67,28 @@ class ListingItem extends Component {
     }
 
     render() {
-        const { name, deposit, isWhitelisted, owner, hash } = this.props;
+        const { name, deposit, isWhitelisted, owner, hash, challengeId } = this.props;
         return (
             <Item>
                 <ChallengePopup modal={this.state.modal} submit={this.challenge} toggle={this.challengeToggle} header={"Challenge Listing: " + name} inProgress={this.state.inProgress} />
                 <VotePopup modal={this.state.voteModal} submit={this.vote} toggle={this.voteToggle} header={"Vote Listing: " + name} inProgress={this.state.inProgress} />
                 <Item.Image className='text-center' style={{ display: 'inline', justifyContent: 'center', alignItems: 'center', maxWidth: 80 }}>
-                    <Icon name={isWhitelisted ? 'check circle outline' : 'circle outline'} size='huge' />
+                    <Icon name={isWhitelisted ? 'check circle outline' : 'circle outline'} basic color='blue' size='huge' />
                 </Item.Image>
                 <Item.Content>
-                    <Item.Header>{name}</Item.Header>
+                    <Item.Header>
+                        <span>{name}</span>
+                    </Item.Header>
                     <Item.Meta>
-                        <b>Owner:</b> <Label>{owner}</Label>
-                        <br /> <br />
-                        <b>Hash:</b> <Label>{hash}</Label>
-                        <b>Deposit:</b> <Label>{deposit}</Label>
+                        <Icon name={challengeId > 0 && 'minus circle'} basic color='red' size='large' />
                     </Item.Meta>
+                    <Item.Description>
+                        <b>Owner:</b> {owner}
+                        <br />
+                        <b>Hash:</b> {hash}
+                        <br />
+                        <b>Deposit:</b> {deposit}
+                    </Item.Description>
                     <Item.Extra>
                         <Button basic color='green' size='mini' floated='right' onClick={this.resolve}>Resolve</Button>
                         <Button basic color='purple' size='mini' floated='right' onClick={this.voteToggle}>Vote</Button>
