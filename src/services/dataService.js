@@ -25,7 +25,6 @@ export async function getAllListings() {
 export function updateListing(listing) {
     const listings = JSON.parse(localStorage.getItem("listings"));
     const index = listings.findIndex(function (e) { return e.hash === listing.hash });
-    console.log(index);
     if (index > -1) {
         listings.splice(index, 1, listing)
     }

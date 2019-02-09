@@ -64,7 +64,6 @@ export async function applyListing(name, deposit) {
 
                 if (type === 'Finalised') {
                     console.log('Completed at block hash', status.asFinalised.toHex());
-
                     events.forEach(async ({ phase, event: { data, method, section } }) => {
                         console.log('\t', phase.toString(), `: ${section}.${method}`, data.toString());
                         // check if the tcr proposed event was emitted by Substrate runtime
@@ -73,15 +72,15 @@ export async function applyListing(name, deposit) {
                             const datajson = JSON.parse(data.toString());
                             const listingInstance = {
                                 name: name,
-                                hash: datajson[1],
                                 owner: datajson[0],
+                                hash: datajson[1],
                                 deposit: datajson[2],
                                 isWhitelisted: false,
                                 challengeId: 0,
                                 rejected: false,
+                                votes: []
                             }
                             await dataService.insertListing(listingInstance);
-
                             // resolve the promise with listing data
                             resolve(listingInstance);
                         }
@@ -163,13 +162,8 @@ export async function voteListing(hash, voteValue, deposit) {
                         events.forEach(async ({ phase, event: { data, method, section } }) => {
                             // check if the tcr proposed event was emitted by Substrate runtime
                             if (section.toString() === "tcr" &&
-                                method.toString() === "Accepted") {
-                                // if accepted, updated listing status
+                                method.toString() === "Voted") {
                                 const datajson = JSON.parse(data.toString());
-                                const localListing = dataService.getListing(hash);
-                                localListing.isWhitelisted = true;
-                                localListing.challengeId = 0;
-                                dataService.updateListing(localListing);
                                 // resolve with event data
                                 resolve({
                                     tx: status.asFinalised.toHex(),
@@ -204,14 +198,12 @@ export async function resolveListing(hash) {
                 if (type === 'Finalised') {
                     console.log('Completed at block hash', status.asFinalised.toHex());
                     events.forEach(async ({ phase, event: { data, method, section } }) => {
-                        // check if the tcr proposed event was emitted by Substrate runtime
                         if (section.toString() === "tcr" &&
                             method.toString() === "Accepted") {
                             // if accepted, updated listing status
                             const datajson = JSON.parse(data.toString());
                             const localListing = dataService.getListing(hash);
                             localListing.isWhitelisted = true;
-                            localListing.challengeId = 0;
                             dataService.updateListing(localListing);
                             // resolve with event data
                             resolve({
@@ -225,10 +217,39 @@ export async function resolveListing(hash) {
                             // if accepted, updated listing status
                             const datajson = JSON.parse(data.toString());
                             const localListing = dataService.getListing(hash);
-                            localListing.isWhitelisted = false;
                             localListing.rejected = true;
-                            localListing.challengeId = 0;
                             dataService.updateListing(localListing);
+                            // resolve with event data
+                            resolve({
+                                tx: status.asFinalised.toHex(),
+                                data: datajson
+                            });
+                        }
+                    });
+                }
+            })
+            .catch(err => reject(err));
+    });
+}
+
+// claim reward for a resolved challenge
+export async function claimReward(challengeId) {
+    return new Promise(async (resolve, reject) => {
+        const api = await _createApiWithTypes();
+        const keys = _getKeysFromSeed();
+
+        // create, sign and send transaction
+        api.tx.tcr
+            // create transaction
+            .claimReward(challengeId)
+            // Sign and send the transcation
+            .signAndSend(keys, ({ events = [], status, type }) => {
+                if (type === 'Finalised') {
+                    console.log('Completed at block hash', status.asFinalised.toHex());
+                    events.forEach(async ({ phase, event: { data, method, section } }) => {
+                        if (section.toString() === "tcr" &&
+                            method.toString() === "Claimed") {
+                            const datajson = JSON.parse(data.toString());
                             // resolve with event data
                             resolve({
                                 tx: status.asFinalised.toHex(),

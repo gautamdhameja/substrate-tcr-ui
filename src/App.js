@@ -149,7 +149,7 @@ class App extends Component {
           <br />
           <div className="container text-left">
             <span className="h3">Listings</span>
-            <button className="btn btn-secondary float-right" style={{ marginLeft: 10 }} type="button" onClick={this.handleSubmit}>Get Listings</button>
+            <button className="btn btn-secondary float-right" style={{ marginLeft: 10 }} type="button" onClick={this.handleSubmit}>Refresh Listings</button>
             <button className="btn btn-primary float-right" onClick={this.toggle}>Apply Listing</button>
             <br /><br /><br />
             <div className="text-left">

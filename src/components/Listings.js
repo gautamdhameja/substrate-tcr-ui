@@ -35,10 +35,10 @@ class ListingItem extends Component {
     }
 
     challenge(deposit) {
-        this.inProgress = true;
+        this.setState({ inProgress: true });
         service.challengeListing(this.props.hash, deposit)
             .then((result) => {
-                this.inProgress = false;
+                this.setState({ inProgress: false });
                 this.challengeToggle();
                 console.log(result);
             }).catch((err) => {
@@ -47,10 +47,10 @@ class ListingItem extends Component {
     }
 
     vote(voteVal, deposit) {
-        this.inProgress = true;
+        this.setState({ inProgress: true });
         service.voteListing(this.props.hash, voteVal, deposit)
             .then((result) => {
-                this.inProgress = false;
+                this.setState({ inProgress: false });
                 this.voteToggle();
                 console.log(result);
             }).catch((err) => {
@@ -61,7 +61,6 @@ class ListingItem extends Component {
     resolve() {
         service.resolveListing(this.props.hash)
             .then((result) => {
-                this.inProgress = false;
                 console.log(result);
             }).catch((err) => {
                 alert(err.message);
@@ -69,7 +68,12 @@ class ListingItem extends Component {
     }
 
     claim() {
-
+        service.claimReward(this.props.challengeId)
+            .then((result) => {
+                console.log(result);
+            }).catch((err) => {
+                alert(err.message);
+            });;
     }
 
     getIcon(isWhitelisted, rejected) {
@@ -101,7 +105,7 @@ class ListingItem extends Component {
     }
 
     render() {
-        const { name, deposit, isWhitelisted, owner, hash, challengeId, rejected } = this.props;
+        const { name, deposit, isWhitelisted, owner, hash, challengeId, rejected } = this.props;        
         return (
             <Item>
                 <ChallengePopup modal={this.state.modal} submit={this.challenge} toggle={this.challengeToggle} header={"Challenge Listing: " + name} inProgress={this.state.inProgress} />
@@ -121,10 +125,14 @@ class ListingItem extends Component {
                         <b>Deposit:</b> {deposit}
                     </Item.Description>
                     <Item.Extra>
-                        <Button basic color='brown' size='mini' floated='right' onClick={this.claim}>Claim Reward</Button>
-                        <Button basic color='green' size='mini' floated='right' onClick={this.resolve}>Resolve</Button>
-                        <Button basic color='blue' size='mini' floated='right' onClick={this.voteToggle}>Vote</Button>
-                        <Button basic color='red' size='mini' floated='right' onClick={this.challengeToggle}>Challenge</Button>
+                        {(isWhitelisted || rejected) && challengeId > 0 &&
+                            <Button basic color='brown' size='mini' floated='right' onClick={this.claim}>Claim Reward</Button>}
+                        {!isWhitelisted && !rejected &&
+                        <Button basic color='green' size='mini' floated='right' onClick={this.resolve}>Resolve</Button>}
+                        {(isWhitelisted && !rejected) && (!isWhitelisted && rejected) &&
+                            <Button basic color='blue' size='mini' floated='right' onClick={this.voteToggle}>Vote</Button>}
+                        {!isWhitelisted && !rejected && challengeId === 0 &&
+                            <Button basic color='red' size='mini' floated='right' onClick={this.challengeToggle}>Challenge</Button>}
                     </Item.Extra>
                 </Item.Content>
             </Item>
@@ -136,6 +144,6 @@ const Listings = ({ list }) => (
     <Item.Group divided>
         {list.map(item => <ListingItem key={item.name} {...item} />)}
     </Item.Group>
-)
+) 
 
 export default Listings
