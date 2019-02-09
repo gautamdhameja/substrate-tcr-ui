@@ -77,8 +77,7 @@ export async function applyListing(name, deposit) {
                                 deposit: datajson[2],
                                 isWhitelisted: false,
                                 challengeId: 0,
-                                rejected: false,
-                                votes: []
+                                rejected: false
                             }
                             await dataService.insertListing(listingInstance);
                             // resolve the promise with listing data
