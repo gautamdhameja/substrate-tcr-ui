@@ -4,12 +4,9 @@ const { Keyring } = require('@polkadot/keyring');
 const { stringToU8a } = require('@polkadot/util');
 const dataService = require('./dataService');
 
-// Initialise the websocket provider to connect to the Substrate node
-const wsProvider = new WsProvider(process.env.REACT_APP_SUBSTRATE_ADDR);
-
 // connects to the substrate node
 export async function connect() {
-    const api = await ApiPromise.create(wsProvider);
+    const api = await _createApiWithTypes();
 
     // Retrieve the chain & node information information via rpc calls
     const [chain, name, version] = await Promise.all([
@@ -25,7 +22,7 @@ export async function connect() {
 
 // gets TCR parameters from the chain storage
 export async function getTcrDetails() {
-    const api = await ApiPromise.create(wsProvider);
+    const api = await _createApiWithTypes();
 
     const [asl, csl, md] = await Promise.all([
         api.query.tcr.applyStageLen(),
@@ -265,6 +262,7 @@ export async function claimReward(challengeId) {
 // create an API promise object with custom types
 async function _createApiWithTypes() {
     return await ApiPromise.create({
+        provider: new WsProvider(process.env.REACT_APP_SUBSTRATE_ADDR),
         types: {
             Listing: {
                 "id": "u32",
@@ -294,7 +292,8 @@ async function _createApiWithTypes() {
                 "value": "bool",
                 "deposit": "Balance",
                 "claimed": "bool"
-            }
+            },
+            TokenBalance: "u128"
         }
     });
 }
