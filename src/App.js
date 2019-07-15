@@ -1,4 +1,5 @@
 import React, { Component } from 'react';
+import { waitReady } from '@polkadot/wasm-crypto';
 import { Row, Col } from 'reactstrap';
 import Listings from './components/Listings'
 import ApplyPopup from './modals/Apply';
@@ -30,30 +31,34 @@ class App extends Component {
   }
 
   componentDidMount() {
-    // localStorage.setItem("listings", JSON.stringify([]));
-    const localSeed = localStorage.getItem("seed");
-    if (localSeed) {
-      this.getBalance(localSeed);
-      this.setState({ seed: localSeed });
-    }
+    // We are loading the wasm-crypto manually 
+    // as it is needed to create keyring from the seed on the app start.
+    waitReady().then(() => {
+      // localStorage.setItem("listings", JSON.stringify([]));
+      const localSeed = localStorage.getItem("seed");
+      if (localSeed) {
+        this.getBalance(localSeed);
+        this.setState({ seed: localSeed });
+      }
 
-    service.connect().then((connect) => {
-      this.setState({
-        connection: connect
+      service.connect().then((connect) => {
+        this.setState({
+          connection: connect
+        });
       });
-    });
 
-    service.getTcrDetails().then((details) => {
-      this.setState({
-        tcrDetails: {
-          minDeposit: details.mdTokens,
-          applyStageLen: details.aslSeconds,
-          commitStageLen: details.cslSeconds
-        }
+      service.getTcrDetails().then((details) => {
+        this.setState({
+          tcrDetails: {
+            minDeposit: details.mdTokens,
+            applyStageLen: details.aslSeconds,
+            commitStageLen: details.cslSeconds
+          }
+        });
       });
-    });
 
-    this.getAllListings();
+      this.getAllListings();
+    });
   }
 
   toggle() {

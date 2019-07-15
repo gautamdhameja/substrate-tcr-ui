@@ -1,5 +1,4 @@
 const { ApiPromise } = require('@polkadot/api');
-const { WsProvider } = require('@polkadot/rpc-provider');
 const { Keyring } = require('@polkadot/keyring');
 const { stringToU8a } = require('@polkadot/util');
 const dataService = require('./dataService');
@@ -37,7 +36,7 @@ export async function getTcrDetails() {
 
     // converting the Balance type to value string
     const mdTokens = JSON.stringify(md);
-
+    console.log(aslSeconds, cslSeconds, mdTokens);
     return { aslSeconds, cslSeconds, mdTokens };
 }
 
@@ -51,16 +50,17 @@ export async function applyListing(name, deposit) {
     return new Promise(async (resolve, reject) => {
         const api = await ApiPromise.create();
         const keys = _getKeysFromSeed();
-
+        const nonce = await api.query.system.accountNonce(keys.address);
+        console.log('Sending...', name, deposit);
         // create, sign and send transaction
         api.tx.tcr
             // create transaction
             .propose(name, deposit)
             // Sign and send the transcation
-            .signAndSend(keys, ({ events = [], status, type }) => {
-
-                if (type === 'Finalised') {
-                    console.log('Completed at block hash', status.asFinalised.toHex());
+            .sign(keys, { nonce })
+            .send(({ events = [], status }) => {
+                if (status.isFinalized) {
+                    console.log(status.asFinalized.toHex());
                     events.forEach(async ({ phase, event: { data, method, section } }) => {
                         console.log('\t', phase.toString(), `: ${section}.${method}`, data.toString());
                         // check if the tcr proposed event was emitted by Substrate runtime
@@ -92,7 +92,7 @@ export async function applyListing(name, deposit) {
 export async function getBalance(seed, callback) {
     const keys = _getKeysFromSeed(seed);
     const api = await ApiPromise.create();
-    api.query.token.balanceOf(keys.address(), (balance) => {
+    api.query.token.balanceOf(keys.address, (balance) => {
         let bal = JSON.stringify(balance);
         callback(bal);
     });
@@ -103,6 +103,7 @@ export async function challengeListing(hash, deposit) {
     return new Promise(async (resolve, reject) => {
         const api = await _createApiWithTypes();
         const keys = _getKeysFromSeed();
+        const nonce = await api.query.system.accountNonce(keys.address);
 
         const listing = await api.query.tcr.listings(hash);
         const listingJson = JSON.parse(listing.toString());
@@ -111,10 +112,10 @@ export async function challengeListing(hash, deposit) {
         api.tx.tcr
             // create transaction
             .challenge(listingJson.id, deposit)
-            // Sign and send the transcation
-            .signAndSend(keys, ({ events = [], status, type }) => {
-                if (type === 'Finalised') {
-                    console.log('Completed at block hash', status.asFinalised.toHex());
+            .sign(keys, { nonce })
+            .send(({ events = [], status }) => {
+                if (status.isFinalized) {
+                    console.log(status.asFinalized.toHex());
                     events.forEach(async ({ phase, event: { data, method, section } }) => {
                         // check if the tcr proposed event was emitted by Substrate runtime
                         if (section.toString() === "tcr" && method.toString() === "Challenged") {
@@ -125,7 +126,7 @@ export async function challengeListing(hash, deposit) {
                             dataService.updateListing(localListing);
                             // resolve the promise with challenge data
                             resolve({
-                                tx: status.asFinalised.toHex(),
+                                tx: status.asFinalized.toHex(),
                                 data: datajson
                             });
                         }
@@ -141,6 +142,7 @@ export async function voteListing(hash, voteValue, deposit) {
     return new Promise(async (resolve, reject) => {
         const api = await _createApiWithTypes();
         const keys = _getKeysFromSeed();
+        const nonce = await api.query.system.accountNonce(keys.address);
 
         const listing = await api.query.tcr.listings(hash);
         const listingJson = JSON.parse(listing.toString());
@@ -151,10 +153,10 @@ export async function voteListing(hash, voteValue, deposit) {
             api.tx.tcr
                 // create transaction
                 .vote(listingJson.challenge_id, voteValue, deposit)
-                // Sign and send the transcation
-                .signAndSend(keys, ({ events = [], status, type }) => {
-                    if (type === 'Finalised') {
-                        console.log('Completed at block hash', status.asFinalised.toHex());
+                .sign(keys, { nonce })
+                .send(({ events = [], status }) => {
+                    if (status.isFinalized) {
+                        console.log(status.asFinalized.toHex());
                         events.forEach(async ({ phase, event: { data, method, section } }) => {
                             // check if the tcr proposed event was emitted by Substrate runtime
                             if (section.toString() === "tcr" &&
@@ -162,7 +164,7 @@ export async function voteListing(hash, voteValue, deposit) {
                                 const datajson = JSON.parse(data.toString());
                                 // resolve with event data
                                 resolve({
-                                    tx: status.asFinalised.toHex(),
+                                    tx: status.asFinalized.toHex(),
                                     data: datajson
                                 });
                             }
@@ -181,6 +183,7 @@ export async function resolveListing(hash) {
     return new Promise(async (resolve, reject) => {
         const api = await _createApiWithTypes();
         const keys = _getKeysFromSeed();
+        const nonce = await api.query.system.accountNonce(keys.address);
 
         const listing = await api.query.tcr.listings(hash);
         const listingJson = JSON.parse(listing.toString());
@@ -189,10 +192,10 @@ export async function resolveListing(hash) {
         api.tx.tcr
             // create transaction
             .resolve(listingJson.id)
-            // Sign and send the transcation
-            .signAndSend(keys, ({ events = [], status, type }) => {
-                if (type === 'Finalised') {
-                    console.log('Completed at block hash', status.asFinalised.toHex());
+            .sign(keys, { nonce })
+            .send(({ events = [], status }) => {
+                if (status.isFinalized) {
+                    console.log(status.asFinalized.toHex());
                     events.forEach(async ({ phase, event: { data, method, section } }) => {
                         if (section.toString() === "tcr" &&
                             method.toString() === "Accepted") {
@@ -203,7 +206,7 @@ export async function resolveListing(hash) {
                             dataService.updateListing(localListing);
                             // resolve with event data
                             resolve({
-                                tx: status.asFinalised.toHex(),
+                                tx: status.asFinalized.toHex(),
                                 data: datajson
                             });
                         }
@@ -217,7 +220,7 @@ export async function resolveListing(hash) {
                             dataService.updateListing(localListing);
                             // resolve with event data
                             resolve({
-                                tx: status.asFinalised.toHex(),
+                                tx: status.asFinalized.toHex(),
                                 data: datajson
                             });
                         }
@@ -233,22 +236,23 @@ export async function claimReward(challengeId) {
     return new Promise(async (resolve, reject) => {
         const api = await _createApiWithTypes();
         const keys = _getKeysFromSeed();
+        const nonce = await api.query.system.accountNonce(keys.address);
 
         // create, sign and send transaction
         api.tx.tcr
             // create transaction
             .claimReward(challengeId)
-            // Sign and send the transcation
-            .signAndSend(keys, ({ events = [], status, type }) => {
-                if (type === 'Finalised') {
-                    console.log('Completed at block hash', status.asFinalised.toHex());
+            .sign(keys, { nonce })
+            .send(({ events = [], status }) => {
+                if (status.isFinalized) {
+                    console.log(status.asFinalized.toHex());
                     events.forEach(async ({ phase, event: { data, method, section } }) => {
                         if (section.toString() === "tcr" &&
                             method.toString() === "Claimed") {
                             const datajson = JSON.parse(data.toString());
                             // resolve with event data
                             resolve({
-                                tx: status.asFinalised.toHex(),
+                                tx: status.asFinalized.toHex(),
                                 data: datajson
                             });
                         }
@@ -262,7 +266,6 @@ export async function claimReward(challengeId) {
 // create an API promise object with custom types
 async function _createApiWithTypes() {
     return await ApiPromise.create({
-        provider: new WsProvider(process.env.REACT_APP_SUBSTRATE_ADDR),
         types: {
             Listing: {
                 "id": "u32",
@@ -309,7 +312,7 @@ function _getKeysFromSeed(seed) {
         throw new Error("Seed not found.");
     }
 
-    const keyring = new Keyring();
+    const keyring = new Keyring({ type: 'sr25519' });
     const paddedSeed = _seed.padEnd(32);
     return keyring.addFromSeed(stringToU8a(paddedSeed));
 }
